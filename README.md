@@ -1,6 +1,6 @@
-# AI Voting Anomaly Detection with RL
+# Flask Dashboard - Voting Anomaly Detection with RL
 
-Real-time voting anomaly detection system with Deep Q-Network (DQN) reinforcement learning that learns and adapts to new tampering patterns.
+Modern dark-themed Flask dashboard inspired by Bhacemp template, featuring real-time RL learning and anomaly detection.
 
 ## 🚀 Quick Start
 
@@ -10,76 +10,96 @@ Real-time voting anomaly detection system with Deep Q-Network (DQN) reinforcemen
 pip install -r requirements.txt
 ```
 
-Or install individually:
-```bash
-pip install streamlit pandas numpy matplotlib scikit-learn torch reportlab joblib
-```
-
-### 2. Run the Dashboard
+### 2. Run the Flask Application
 
 ```bash
-streamlit run vote_dashboard.py
+python app.py
 ```
 
-The dashboard will automatically open in your browser at `http://localhost:8501`
+The dashboard will be available at `http://localhost:5000`
 
-## 📋 What You'll See
+## 📋 Features
 
-### Dashboard Features:
-- **Live Vote Trends**: Real-time vote counts for 4 candidates
-- **Anomaly Detection**: Ensemble models (Isolation Forest, LOF, One-Class SVM) + RL Agent
-- **RL Predictions**: Reinforcement learning agent making real-time predictions
-- **RL Learning Curve**: Visualizes how the RL agent improves over time
-- **RL Training Metrics**: Loss, rewards, and decision quality
-- **Anomaly Attribution**: Which candidates are affected by anomalies
+### Dashboard Components:
+- **Dark Theme UI**: Modern, professional design matching Bhacemp template
+- **Sidebar Navigation**: Quick access to different sections
+- **Real-time Statistics**: Live KPIs with mini charts
+- **Live Vote Trends**: Real-time visualization of candidate votes
+- **Anomaly Detection**: Ensemble models + RL agent predictions
+- **RL Learning Curves**: Visualize rewards and training loss
+- **Model Comparison**: Compare all detection models
+- **Anomaly Log Table**: Detailed log of detected anomalies
+- **Alert System**: Color-coded alerts in sidebar
 
-### Controls (Sidebar):
-- **▶ Start/Resume**: Begin the simulation
-- **🛑 Pause**: Pause the simulation
-- **Alert Threshold**: Adjust sensitivity (0.0 - 1.0)
-- **💾 Save RL Model**: Manually save the RL model
+### RL Agent Features:
+- **Online Learning**: Learns from each data point in real-time
+- **Pattern Adaptation**: Adapts to new tampering patterns
+- **Visual Feedback**: See learning progress through charts
+- **Model Persistence**: Auto-saves every 10 steps
 
-## 🤖 RL Agent Features
+## 🎨 Design Features
 
-- **Online Learning**: Learns from each new data point in real-time
-- **Pattern Adaptation**: Adapts to new tampering patterns automatically
-- **Model Persistence**: Auto-saves every 10 steps, manual save available
-- **Visual Feedback**: See rewards, losses, and learning progress
+- **Dark Theme**: Professional dark color scheme
+- **Responsive Layout**: Works on different screen sizes
+- **Real-time Updates**: Auto-refreshes every second
+- **Interactive Charts**: Chart.js powered visualizations
+- **Color-coded Alerts**: Visual alert system in sidebar
 
-## 📁 Files
+## 📁 Project Structure
 
-- `vote_dashboard.py` - Main Streamlit dashboard
-- `rl_anomaly_detector.py` - DQN-based RL agent
-- `requirements.txt` - Python dependencies
-- `rl_dqn_model.pth` - Saved RL model (created after first run)
-- `iso.pkl`, `lof.pkl`, `ocsvm.pkl` - Ensemble models
-
-## 🎯 How It Works
-
-1. **Data Simulation**: Simulates voting data with normal and anomalous patterns
-2. **Feature Extraction**: Extracts 10 features (total votes, differences, ratios)
-3. **Ensemble Detection**: Three ML models vote on anomalies
-4. **RL Learning**: DQN agent learns to predict anomalies, rewarded by ensemble agreement
-5. **Real-time Updates**: Dashboard updates every second with new predictions
-
-## 💡 Tips
-
-- Watch the RL Learning Curve to see the agent improve over time
-- The RL agent starts with high exploration (ε=1.0) and gradually becomes more confident
-- Check the "RL vs Ensemble Comparison" to see agreement rates
-- The model saves automatically, so you can stop and resume learning
-
-## 🔧 Troubleshooting
-
-**Import Error**: Make sure all dependencies are installed
-```bash
-pip install -r requirements.txt
+```
+e:\model\
+├── app.py                 # Flask application
+├── templates/
+│   └── dashboard.html     # Main dashboard template
+├── static/
+│   ├── style.css         # Dark theme styling
+│   └── script.js         # Real-time updates & charts
+├── rl_anomaly_detector.py # RL agent implementation
+└── requirements.txt       # Dependencies
 ```
 
-**Port Already in Use**: Streamlit will try a different port automatically, or specify one:
-```bash
-streamlit run vote_dashboard.py --server.port 8502
-```
+## 🔧 API Endpoints
 
-**RL Model Not Loading**: The model will be created on first run. If you see errors, delete `rl_dqn_model.pth` and restart.
+- `GET /` - Main dashboard page
+- `GET /api/status` - Get current system status
+- `GET /api/data` - Get all data for charts
+- `GET /api/alerts` - Get recent alerts
+- `POST /api/control` - Control simulation (start/stop/threshold)
 
+## 💡 Usage
+
+1. **Start the Application**: Run `python app.py`
+2. **Open Browser**: Navigate to `http://localhost:5000`
+3. **Start Simulation**: Click "▶ Start Simulation" button
+4. **Monitor**: Watch real-time updates, charts, and RL learning
+5. **Adjust Threshold**: Use the slider to adjust anomaly sensitivity
+6. **View Alerts**: Check sidebar for active alerts
+7. **Review Log**: Scroll to see detailed anomaly log table
+
+## 🎯 Key Differences from Streamlit Version
+
+- **Flask-based**: More control over UI/UX
+- **Dark Theme**: Professional Bhacemp-inspired design
+- **Better Performance**: More efficient for production
+- **Customizable**: Easy to extend and modify
+- **RESTful API**: Clean API endpoints for data access
+
+## 🔧 Configuration
+
+Edit `app.py` to customize:
+- Port number (default: 5000)
+- Update interval (default: 1 second)
+- Max simulation steps (default: 200)
+- Model paths
+
+## 📊 Dashboard Sections
+
+1. **Statistics Overview**: 4 KPI cards with mini charts
+2. **Vote Trends**: Line chart showing all candidates
+3. **Anomaly Scores**: Detection scores over time
+4. **RL Learning**: Rewards and loss curves
+5. **Model Comparison**: All models side-by-side
+6. **Anomaly Log**: Detailed table of all anomalies
+
+Enjoy your modern anomaly detection dashboard! 🎉
