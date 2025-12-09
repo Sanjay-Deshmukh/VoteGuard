@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VoteGuard AI | Anomaly Detection Dashboard</title>
+    <meta name="description"
+        content="Advanced AI-powered voting anomaly detection with real-time monitoring, reinforcement learning, and comprehensive analytics.">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style_enhanced.css') }}">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script
+        src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+
+    <!-- Three.js for 3D - Disabled -->
+    <!-- <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script> -->
+    <!-- <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/controls/OrbitControls.js"></script> -->
+
+    <!-- Socket.IO -->
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+
+    <!-- D3.js for Decision Tree -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+
+<body class="dark-mode">
+    <!-- Theme Toggle -->
+    <button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">
+        <span class="theme-icon sun">☀️</span>
+        <span class="theme-icon moon">🌙</span>
+    </button>
+
+    <!-- Fullscreen Chart Modal -->
+    <div id="fullscreen-modal" class="fullscreen-modal">
+        <div class="fullscreen-content">
+            <button class="close-fullscreen" id="close-fullscreen">✕</button>
+            <canvas id="fullscreen-chart"></canvas>
+        </div>
+    </div>
+
+    <!-- Notification Container -->
+    <div id="notification-container" class="notification-container"></div>
+
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-container">
+                    <div class="logo-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                            <path d="M2 17l10 5 10-5" />
+                            <path d="M2 12l10 5 10-5" />
+                        </svg>
+                    </div>
+                    <h1 class="logo">VoteGuard<span class="logo-ai">AI</span></h1>
+                </div>
+                <p class="tagline">Anomaly Detection System</p>
+            </div>
+
+            <div class="user-profile">
+                <div class="avatar">
+                    <img src="https://ui-avatars.com/api/?name=Admin&background=6366f1&color=fff&size=128" alt="User">
+                    <span class="status online"></span>
+                </div>
+                <div class="user-info">
+                    <p class="user-name">System Admin</p>
+                    <p class="user-role">RL Monitoring</p>
+                </div>
+                <button class="settings-btn" id="user-settings">⚙️</button>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active" data-section="dashboard">
+                    <span class="nav-icon">📊</span>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" class="nav-item" data-section="analytics">
+                    <span class="nav-icon">🔍</span>
+                    <span>Analytics</span>
+                </a>
+                <a href="#" class="nav-item" data-section="visualizations">
+                    <span class="nav-icon">🗺️</span>
+                    <span>Visualizations</span>
+                </a>
+                <a href="#" class="nav-item" data-section="config">
+                    <span class="nav-icon">⚙️</span>
+                    <span>Configuration</span>
+                </a>
+                <a href="#" class="nav-item" data-section="reports">
+                    <span class="nav-icon">📝</span>
+                    <span>Reports</span>
+                </a>
+
+                <a href="/api/docs" class="nav-item" target="_blank">
+                    <span class="nav-icon">📚</span>
+                    <span>API Docs</span>
+                </a>
+                <a href="/logout" class="nav-item logout-nav">
+                    <span class="nav-icon">🚪</span>
+                    <span>Logout</span>
+                </a>
+            </nav>
+
+            <div class="prediction-widget">
+                <h4>🔮 Anomaly Prediction</h4>
+                <div class="prediction-gauge">
+                    <svg viewBox="0 0 100 50" class="gauge-svg">
+                        <path d="M 10 45 A 35 35 0 0 1 90 45" fill="none" stroke="rgba(255,255,255,0.1)"
+                            stroke-width="8" stroke-linecap="round" />
+                        <path id="prediction-arc" d="M 10 45 A 35 35 0 0 1 90 45" fill="none"
+                            stroke="url(#predictionGradient)" stroke-width="8" stroke-linecap="round"
+                            stroke-dasharray="0, 110" />
+                        <defs>
+                            <linearGradient id="predictionGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" style="stop-color:#10b981" />
+                                <stop offset="50%" style="stop-color:#f59e0b" />
+                                <stop offset="100%" style="stop-color:#ef4444" />
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                    <div class="prediction-value" id="prediction-value">0%</div>
+                </div>
+                <p class="prediction-trend" id="prediction-trend">Trend: Stable</p>
+            </div>
+
+            <div class="alerts-section">
+                <h3>⚠️ LIVE ALERTS</h3>
+                <div id="alerts-container">
+                    <div class="alert-card waiting">
+                        <span class="alert-icon">📡</span>
+                        <div class="alert-info">
+                            <p class="alert-type">Waiting for data...</p>
+                            <p class="alert-id">Start simulation to detect anomalies</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Bar -->
+            <header class="top-bar">
+                <div class="top-bar-left">
+                    <button class="menu-toggle" id="menu-toggle">☰</button>
+                    <div class="search-box">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" placeholder="Search anomalies, candidates..." id="search-input">
+                    </div>
+                </div>
+                <div class="top-bar-center">
+                    <div class="live-indicator" id="live-indicator">
+                        <span class="pulse"></span>
+                        <span class="status-text">Offline</span>
+                    </div>
+                </div>
+                <div class="top-bar-actions">
+                    <button class="icon-btn" id="notification-btn" title="Notifications">
+                        <span class="notification-badge" id="notification-badge">0</span>
+                        🔔
+                    </button>
+                    <button class="icon-btn" id="email-subscribe-btn" title="Email Alerts">📧</button>
+                    <button class="icon-btn" id="fullscreen-btn" title="Fullscreen">⛶</button>
+                </div>
+            </header>
+
+            <!-- Control Panel -->
+            <section class="control-panel glass-card">
+                <div class="control-buttons">
+                    <button id="start-btn" class="btn btn-primary btn-glow">
+                        <span class="btn-icon">▶</span>
+                        Start Simulation
+                    </button>
+                    <button id="stop-btn" class="btn btn-danger" disabled>
+                        <span class="btn-icon">⏸</span>
+                        Pause
+                    </button>
+                    <button id="reset-btn" class="btn btn-secondary">
+                        <span class="btn-icon">🔄</span>
+                        Reset
+                    </button>
+                </div>
+
+                <div class="threshold-control">
+                    <label>Alert Threshold</label>
+                    <div class="slider-container">
+                        <input type="range" id="threshold-slider" min="0" max="1" step="0.05" value="0.5">
+                        <div class="slider-value" id="threshold-value">0.50</div>
+                    </div>
+                </div>
+
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="simulation-progress"></div>
+                    </div>
+                    <span class="progress-text" id="progress-text">0 / 60s</span>
+                </div>
+            </section>
+
+            <!-- Statistics Overview -->
+            <section class="stats-overview">
+                <div class="stat-card glass-card animate-in">
+                    <div class="stat-icon-bg teal">
+                        <span>⏱️</span>
+                    </div>
+                    <div class="stat-content">
+                        <h3>Simulation Time</h3>
+                        <div class="stat-value" id="stat-time">0.00s</div>
+                        <div class="stat-sparkline">
+                            <canvas id="time-sparkline"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stat-card glass-card animate-in" style="--delay: 0.1s">
+                    <div class="stat-icon-bg red">
+                        <span>⚡</span>
+                    </div>
+                    <div class="stat-content">
+                        <h3>Anomalies Detected</h3>
+                        <div class="stat-value" id="stat-anomalies">0</div>
+                        <div class="stat-change" id="anomaly-rate">0% rate</div>
+                    </div>
+                </div>
+
+                <div class="stat-card glass-card animate-in" style="--delay: 0.2s">
+                    <div class="stat-icon-bg purple">
+                        <span>🤖</span>
+                    </div>
+                    <div class="stat-content">
+                        <h3>RL Agent Steps</h3>
+                        <div class="stat-value" id="stat-steps">0</div>
+                        <div class="stat-change positive" id="rl-epsilon">ε: 1.000</div>
+                    </div>
+                </div>
+
+                <div class="stat-card glass-card animate-in" style="--delay: 0.3s">
+                    <div class="stat-icon-bg orange">
+                        <span>🎯</span>
+                    </div>
+                    <div class="stat-content">
+                        <h3>Avg Reward</h3>
+                        <div class="stat-value" id="stat-reward">0.00</div>
+                        <div class="stat-sparkline">
+                            <canvas id="reward-sparkline"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Confidence Dashboard -->
+            <section class="confidence-section glass-card">
+                <h2 class="section-title">🎯 Model Confidence Dashboard</h2>
+                <div class="confidence-grid">
+                    <div class="confidence-gauge" id="iso-gauge">
+                        <svg viewBox="0 0 120 120" class="radial-gauge">
+                            <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(255,255,255,0.1)"
+                                stroke-width="10" />
+                            <circle class="gauge-fill" cx="60" cy="60" r="50" fill="none" stroke="#ef4444"
+                                stroke-width="10" stroke-dasharray="0 314" stroke-linecap="round"
+                                transform="rotate(-90 60 60)" />
+                        </svg>
+                        <div class="gauge-label">
+                            <span class="gauge-value">0%</span>
+                            <span class="gauge-name">Isolation Forest</span>
+                        </div>
+                    </div>
+                    <div class="confidence-gauge" id="lof-gauge">
+                        <svg viewBox="0 0 120 120" class="radial-gauge">
+                            <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(255,255,255,0.1)"
+                                stroke-width="10" />
+                            <circle class="gauge-fill" cx="60" cy="60" r="50" fill="none" stroke="#3b82f6"
+                                stroke-width="10" stroke-dasharray="0 314" stroke-linecap="round"
+                                transform="rotate(-90 60 60)" />
+                        </svg>
+                        <div class="gauge-label">
+                            <span class="gauge-value">0%</span>
+                            <span class="gauge-name">LOF</span>
+                        </div>
+                    </div>
+                    <div class="confidence-gauge" id="ocsvm-gauge">
+                        <svg viewBox="0 0 120 120" class="radial-gauge">
+                            <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(255,255,255,0.1)"
+                                stroke-width="10" />
+                            <circle class="gauge-fill" cx="60" cy="60" r="50" fill="none" stroke="#10b981"
+                                stroke-width="10" stroke-dasharray="0 314" stroke-linecap="round"
+                                transform="rotate(-90 60 60)" />
+                        </svg>
+                        <div class="gauge-label">
+                            <span class="gauge-value">0%</span>
+                            <span class="gauge-name">One-Class SVM</span>
+                        </div>
+                    </div>
+                    <div class="confidence-gauge" id="rl-gauge">
+                        <svg viewBox="0 0 120 120" class="radial-gauge">
+                            <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(255,255,255,0.1)"
+                                stroke-width="10" />
+                            <circle class="gauge-fill" cx="60" cy="60" r="50" fill="none" stroke="#f59e0b"
+                                stroke-width="10" stroke-dasharray="0 314" stroke-linecap="round"
+                                transform="rotate(-90 60 60)" />
+                        </svg>
+                        <div class="gauge-label">
+                            <span class="gauge-value">0%</span>
+                            <span class="gauge-name">RL Agent</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Main Charts Section -->
+            <section class="charts-grid">
+                <div class="chart-card glass-card expandable" data-chart="voteTrends">
+                    <div class="chart-header">
+                        <h3>📈 Live Vote Count Trends</h3>
+                        <div class="chart-actions">
+                            <button class="chart-btn trend-toggle" title="Toggle Trend Lines">📊</button>
+                            <button class="chart-btn expand-btn" title="Fullscreen">⛶</button>
+                        </div>
+                    </div>
+                    <canvas id="vote-trends-chart"></canvas>
+                </div>
+
+                <div class="chart-card glass-card expandable" data-chart="anomalyScores">
+                    <div class="chart-header">
+                        <h3>⚠️ Anomaly Detection Scores</h3>
+                        <div class="chart-actions">
+                            <button class="chart-btn expand-btn" title="Fullscreen">⛶</button>
+                        </div>
+                    </div>
+                    <canvas id="anomaly-scores-chart"></canvas>
+                </div>
+            </section>
+
+            <!-- Trend Analysis Section -->
+            <section class="trend-section glass-card">
+                <div class="chart-header">
+                    <h3>📉 Trend Analysis (Moving Averages)</h3>
+                    <div class="trend-legend">
+                        <span class="legend-item"><span class="dot ma5"></span>MA-5</span>
+                        <span class="legend-item"><span class="dot ma10"></span>MA-10</span>
+                        <span class="legend-item"><span class="dot raw"></span>Raw Score</span>
+                    </div>
+                </div>
+                <canvas id="trend-chart"></canvas>
+            </section>
+
+            <!-- RL Learning Section -->
+            <section class="rl-section">
+                <div class="chart-card glass-card expandable" data-chart="rlRewards">
+                    <div class="chart-header">
+                        <h3>🏆 RL Learning Curve (Rewards)</h3>
+                        <button class="chart-btn expand-btn" title="Fullscreen">⛶</button>
+                    </div>
+                    <canvas id="rl-rewards-chart"></canvas>
+                </div>
+
+                <div class="chart-card glass-card expandable" data-chart="rlLoss">
+                    <div class="chart-header">
+                        <h3>📉 RL Training Loss</h3>
+                        <button class="chart-btn expand-btn" title="Fullscreen">⛶</button>
+                    </div>
+                    <canvas id="rl-loss-chart"></canvas>
+                </div>
+            </section>
+
+            <!-- Advanced Visualizations -->
+            <section class="visualizations-section">
+                <h2 class="section-title">🎨 Advanced Visualizations</h2>
+
+                <div class="viz-grid">
+                    <!-- Heatmap -->
+                    <div class="viz-card glass-card" id="heatmap-container">
+                        <div class="chart-header">
+                            <h3>🗺️ Anomaly Intensity Heatmap</h3>
+                        </div>
+                        <div id="heatmap" class="heatmap-canvas"></div>
+                    </div><!-- Decision Tree -->
+                    <div class="viz-card glass-card full-width" id="decision-tree-container">
+                        <div class="chart-header">
+                            <h3>🌳 Model Decision Visualization</h3>
+                        </div>
+                        <div id="decision-tree" class="decision-tree-canvas"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Model Comparison -->
+            <section class="comparison-section glass-card">
+                <div class="chart-header">
+                    <h3>🔬 Model Scores Comparison</h3>
+                </div>
+                <canvas id="model-comparison-chart"></canvas>
+            </section>
+
+            <!-- Candidate Attribution -->
+            <section class="attribution-section">
+                <div class="chart-card glass-card expandable" data-chart="candidatePie">
+                    <div class="chart-header">
+                        <h3>🥧 Anomalies Per Candidate</h3>
+                        <button class="chart-btn expand-btn" title="Fullscreen">⛶</button>
+                    </div>
+                    <canvas id="candidate-pie-chart"></canvas>
+                </div>
+
+                <div class="chart-card glass-card expandable" data-chart="candidateBar">
+                    <div class="chart-header">
+                        <h3>📊 Anomaly Types per Candidate</h3>
+                        <button class="chart-btn expand-btn" title="Fullscreen">⛶</button>
+                    </div>
+                    <canvas id="candidate-bar-chart"></canvas>
+                </div>
+            </section>
+
+            <!-- Simulation Complete -->
+            <section id="simulation-complete-section" class="simulation-complete glass-card" style="display: none;">
+                <div class="complete-content">
+                    <div class="trophy-animation">🏆</div>
+                    <h2>Simulation Complete!</h2>
+                    <div class="winner-card">
+                        <p class="winner-label">Final Winner</p>
+                        <h3 class="winner-name" id="winner-name">-</h3>
+                        <p class="winner-votes">with <span id="winner-votes">0</span> Total Votes</p>
+                    </div>
+
+
+                </div>
+            </section><!-- Export Panel -->
+            <section class="export-section glass-card">
+                <h3>📤 Export & Reports</h3>
+                <div class="export-grid">
+                    <button class="export-btn" id="export-pdf">
+                        <span class="export-icon">📄</span>
+                        <span>Generate PDF Report</span>
+                    </button>
+                    <button class="export-btn" id="export-charts">
+                        <span class="export-icon">📊</span>
+                        <span>Export All Charts</span>
+                    </button>
+                    <button class="export-btn" id="export-csv">
+                        <span class="export-icon">📑</span>
+                        <span>Download CSV</span>
+                    </button>
+
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Configuration Modal -->
+    <div id="config-modal" class="modal">
+        <div class="modal-content glass-card">
+            <div class="modal-header">
+                <h2>⚙️ Configuration</h2>
+                <button class="close-modal">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="config-tabs">
+                    <button class="tab-btn active" data-tab="simulation">Simulation</button>
+                    <button class="tab-btn" data-tab="ml">ML Models</button>
+                    <button class="tab-btn" data-tab="rl">RL Agent</button>
+                </div>
+
+                <div class="tab-content active" id="simulation-tab">
+                    <div class="config-group">
+                        <label>Number of Candidates</label>
+                        <input type="number" id="config-candidates" min="2" max="10" value="4">
+                    </div>
+                    <div class="config-group">
+                        <label>Simulation Duration (seconds)</label>
+                        <input type="number" id="config-duration" min="10" max="300" value="60">
+                    </div>
+                    <div class="config-group">
+                        <label>Overt Anomaly Probability</label>
+                        <input type="range" id="config-overt" min="0" max="0.5" step="0.01" value="0.10">
+                        <span class="range-value">10%</span>
+                    </div>
+                    <div class="config-group">
+                        <label>Stealth Anomaly Probability</label>
+                        <input type="range" id="config-stealth" min="0" max="0.5" step="0.01" value="0.05">
+                        <span class="range-value">5%</span>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="ml-tab">
+                    <div class="config-group">
+                        <label>Isolation Forest - Contamination</label>
+                        <input type="range" id="config-iso-contamination" min="0.01" max="0.5" step="0.01" value="0.1">
+                        <span class="range-value">0.10</span>
+                    </div>
+                    <div class="config-group">
+                        <label>Isolation Forest - Estimators</label>
+                        <input type="number" id="config-iso-estimators" min="10" max="500" value="100">
+                    </div>
+                    <div class="config-group">
+                        <label>LOF - Neighbors</label>
+                        <input type="number" id="config-lof-neighbors" min="5" max="50" value="10">
+                    </div>
+                    <div class="config-group">
+                        <label>OCSVM - Kernel</label>
+                        <select id="config-ocsvm-kernel">
+                            <option value="rbf" selected>RBF</option>
+                            <option value="linear">Linear</option>
+                            <option value="poly">Polynomial</option>
+                            <option value="sigmoid">Sigmoid</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="rl-tab">
+                    <div class="config-group">
+                        <label>Learning Rate</label>
+                        <input type="number" id="config-rl-lr" min="0.0001" max="0.1" step="0.0001" value="0.001">
+                    </div>
+                    <div class="config-group">
+                        <label>Gamma (Discount Factor)</label>
+                        <input type="range" id="config-rl-gamma" min="0.9" max="0.999" step="0.001" value="0.99">
+                        <span class="range-value">0.99</span>
+                    </div>
+                    <div class="config-group">
+                        <label>Epsilon Start</label>
+                        <input type="range" id="config-rl-epsilon" min="0.5" max="1.0" step="0.01" value="1.0">
+                        <span class="range-value">1.00</span>
+                    </div>
+                    <div class="config-group">
+                        <label>Batch Size</label>
+                        <input type="number" id="config-rl-batch" min="16" max="256" value="32">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="reset-config">Reset to Defaults</button>
+                <button class="btn btn-primary" id="save-config">Save Configuration</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Email Subscription Modal -->
+    <div id="email-modal" class="modal">
+        <div class="modal-content glass-card small">
+            <div class="modal-header">
+                <h2>📧 Email Alerts</h2>
+                <button class="close-modal">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="config-group">
+                    <label>Email Address</label>
+                    <input type="email" id="email-address" placeholder="your@email.com">
+                </div>
+                <div class="config-group">
+                    <label>Name (Optional)</label>
+                    <input type="text" id="email-name" placeholder="Your Name">
+                </div>
+                <div class="checkbox-group">
+                    <label><input type="checkbox" id="email-on-anomaly" checked> Alert on Anomaly Detection</label>
+                    <label><input type="checkbox" id="email-on-complete" checked> Alert on Simulation Complete</label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" id="subscribe-email">Subscribe</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- History Modal -->
+    <div id="history-modal" class="modal">
+        <div class="modal-content glass-card large">
+            <div class="modal-header">
+                <h2>📅 Session History</h2>
+                <button class="close-modal">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="history-list" id="history-list">
+                    <p class="empty-state">No previous sessions found</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script_enhanced.js') }}?v={{ range(1, 99999) | random }}"></script>
+</body>
+
+</html>

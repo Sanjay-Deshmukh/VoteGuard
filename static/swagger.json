@@ -1,0 +1,436 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "VoteGuard AI API",
+        "version": "2.0.0",
+        "description": "REST API for the VoteGuard Voting Anomaly Detection System with Reinforcement Learning.\n\n## Features\n\n- Real-time simulation control\n- Anomaly detection data\n- ML model configuration\n- Session history\n- Export functionality\n\n## Authentication\n\nMost endpoints are publicly accessible in demo mode. For production, use the login endpoint to authenticate.",
+        "contact": {
+            "name": "Contact VoteGuard Team",
+            "url": "https://voteguard.ai/contact"
+        },
+        "license": {
+            "name": "MIT",
+            "url": "https://opensource.org/licenses/MIT"
+        }
+    },
+    "servers": [
+        {
+            "url": "http://localhost:5000",
+            "description": "Local development server"
+        }
+    ],
+    "tags": [
+        {
+            "name": "Status",
+            "description": "System status and real-time data"
+        },
+        {
+            "name": "Control",
+            "description": "Simulation control operations"
+        },
+        {
+            "name": "Data",
+            "description": "Data retrieval endpoints"
+        },
+        {
+            "name": "Configuration",
+            "description": "System configuration"
+        },
+        {
+            "name": "Export",
+            "description": "Export and reporting"
+        },
+        {
+            "name": "Auth",
+            "description": "Authentication endpoints"
+        }
+    ],
+    "paths": {
+        "/api/status": {
+            "get": {
+                "tags": [
+                    "Status"
+                ],
+                "summary": "Get system status",
+                "description": "Returns current simulation status, latest data point, and statistics.",
+                "responses": {
+                    "200": {
+                        "description": "Current system status",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "running": {
+                                            "type": "boolean",
+                                            "description": "Whether simulation is running"
+                                        },
+                                        "step": {
+                                            "type": "integer",
+                                            "description": "Current simulation step"
+                                        },
+                                        "latest": {
+                                            "type": "object",
+                                            "description": "Latest data point"
+                                        },
+                                        "stats": {
+                                            "type": "object",
+                                            "properties": {
+                                                "total_samples": {
+                                                    "type": "integer"
+                                                },
+                                                "anomalies": {
+                                                    "type": "integer"
+                                                },
+                                                "normal": {
+                                                    "type": "integer"
+                                                }
+                                            }
+                                        },
+                                        "config": {
+                                            "type": "object",
+                                            "description": "Current simulation config"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/alerts": {
+            "get": {
+                "tags": [
+                    "Status"
+                ],
+                "summary": "Get recent alerts",
+                "description": "Returns the 10 most recent anomaly alerts detected by the system.",
+                "responses": {
+                    "200": {
+                        "description": "List of recent alerts",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "alerts": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "time": {
+                                                        "type": "number",
+                                                        "description": "Time in seconds"
+                                                    },
+                                                    "type": {
+                                                        "type": "string",
+                                                        "description": "Anomaly type classification"
+                                                    },
+                                                    "score": {
+                                                        "type": "number",
+                                                        "description": "Anomaly score (0-1)"
+                                                    },
+                                                    "candidates": {
+                                                        "type": "object",
+                                                        "description": "Vote counts per candidate"
+                                                    },
+                                                    "rl_prediction": {
+                                                        "type": "integer",
+                                                        "description": "RL agent prediction"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/control": {
+            "post": {
+                "tags": [
+                    "Control"
+                ],
+                "summary": "Control simulation",
+                "description": "Start, stop, or modify simulation parameters.",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "action"
+                                ],
+                                "properties": {
+                                    "action": {
+                                        "type": "string",
+                                        "enum": [
+                                            "start",
+                                            "stop",
+                                            "threshold"
+                                        ],
+                                        "description": "Control action to perform"
+                                    },
+                                    "threshold": {
+                                        "type": "number",
+                                        "minimum": 0,
+                                        "maximum": 1,
+                                        "description": "Anomaly detection threshold (for threshold action)"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Action completed successfully"
+                    }
+                }
+            }
+        },
+        "/api/data": {
+            "get": {
+                "tags": [
+                    "Data"
+                ],
+                "summary": "Get chart data",
+                "description": "Returns all data for charts and visualizations including vote trends, anomaly scores, and RL metrics.",
+                "responses": {
+                    "200": {
+                        "description": "Chart data for all visualizations"
+                    }
+                }
+            }
+        },
+        "/api/config": {
+            "get": {
+                "tags": [
+                    "Configuration"
+                ],
+                "summary": "Get configuration",
+                "description": "Returns current simulation and ML model configuration.",
+                "responses": {
+                    "200": {
+                        "description": "Current configuration"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Configuration"
+                ],
+                "summary": "Update configuration",
+                "description": "Update simulation or ML model parameters.",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "simulation": {
+                                        "type": "object",
+                                        "properties": {
+                                            "num_candidates": {
+                                                "type": "integer"
+                                            },
+                                            "duration": {
+                                                "type": "integer"
+                                            },
+                                            "overt_anomaly_prob": {
+                                                "type": "number"
+                                            },
+                                            "stealth_anomaly_prob": {
+                                                "type": "number"
+                                            }
+                                        }
+                                    },
+                                    "ml": {
+                                        "type": "object",
+                                        "properties": {
+                                            "iso_contamination": {
+                                                "type": "number"
+                                            },
+                                            "lof_n_neighbors": {
+                                                "type": "integer"
+                                            },
+                                            "ocsvm_kernel": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Updated configuration"
+                    }
+                }
+            }
+        },
+        "/api/prediction": {
+            "get": {
+                "tags": [
+                    "Data"
+                ],
+                "summary": "Get anomaly prediction",
+                "description": "Returns predicted probability of future anomalies based on trend analysis.",
+                "responses": {
+                    "200": {
+                        "description": "Prediction data with probability, confidence, and trend"
+                    }
+                }
+            }
+        },
+        "/api/confidence": {
+            "get": {
+                "tags": [
+                    "Data"
+                ],
+                "summary": "Get model confidence levels",
+                "description": "Returns confidence metrics for each ML model (Isolation Forest, LOF, One-Class SVM, RL Agent).",
+                "responses": {
+                    "200": {
+                        "description": "Confidence data for each model"
+                    }
+                }
+            }
+        },
+        "/api/heatmap": {
+            "get": {
+                "tags": [
+                    "Data"
+                ],
+                "summary": "Get heatmap data",
+                "description": "Returns data for anomaly intensity heatmap visualization.",
+                "responses": {
+                    "200": {
+                        "description": "Heatmap visualization data"
+                    }
+                }
+            }
+        },
+        "/api/decision-tree": {
+            "get": {
+                "tags": [
+                    "Data"
+                ],
+                "summary": "Get decision tree visualization",
+                "description": "Returns the ensemble model decision tree structure for visualization.",
+                "responses": {
+                    "200": {
+                        "description": "Decision tree structure with model nodes"
+                    }
+                }
+            }
+        },
+        "/api/candidate-anomalies": {
+            "get": {
+                "tags": [
+                    "Data"
+                ],
+                "summary": "Get anomaly attribution by candidate",
+                "description": "Returns anomaly counts attributed to each candidate for pie/bar charts.",
+                "responses": {
+                    "200": {
+                        "description": "Candidate anomaly attribution data"
+                    }
+                }
+            }
+        },
+        "/api/history": {
+            "get": {
+                "tags": [
+                    "Data"
+                ],
+                "summary": "Get simulation history",
+                "description": "Returns list of past simulation sessions for comparison.",
+                "responses": {
+                    "200": {
+                        "description": "List of historical sessions"
+                    }
+                }
+            }
+        },
+        "/api/export/pdf": {
+            "get": {
+                "tags": [
+                    "Export"
+                ],
+                "summary": "Export PDF report",
+                "description": "Generate and download a comprehensive PDF report of the simulation including anomaly log and candidate summary.",
+                "responses": {
+                    "200": {
+                        "description": "PDF file download",
+                        "content": {
+                            "application/pdf": {}
+                        }
+                    },
+                    "400": {
+                        "description": "No data available for export"
+                    }
+                }
+            }
+        },
+        "/login": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "User login",
+                "description": "Authenticate user with username and password.",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "username",
+                                    "password"
+                                ],
+                                "properties": {
+                                    "username": {
+                                        "type": "string"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "302": {
+                        "description": "Redirect to dashboard on success"
+                    }
+                }
+            }
+        },
+        "/logout": {
+            "get": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "User logout",
+                "description": "Log out current user and redirect to login page.",
+                "responses": {
+                    "302": {
+                        "description": "Redirect to login page"
+                    }
+                }
+            }
+        }
+    }
+}

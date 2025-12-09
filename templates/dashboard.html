@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voting Anomaly Detection Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h1 class="logo">VoteGuard</h1>
+            </div>
+            
+            <div class="user-profile">
+                <div class="avatar">
+                    <img src="https://ui-avatars.com/api/?name=Admin&background=10b981&color=fff" alt="User">
+                    <span class="status online"></span>
+                </div>
+                <div class="user-info">
+                    <p class="user-name">System Admin</p>
+                    <p class="user-role">Anomaly Detection</p>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active">
+                    <span class="nav-icon">📊</span>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <span class="nav-icon">🔍</span>
+                    <span>Analytics</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <span class="nav-icon">⚙️</span>
+                    <span>Configuration</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <span class="nav-icon">📝</span>
+                    <span>Reports</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <span class="nav-icon">⚙️</span>
+                    <span>Settings</span>
+                </a>
+            </nav>
+            
+            <div class="alerts-section">
+                <h3>ALERTS</h3>
+                <div id="alerts-container">
+                    <!-- Alerts will be dynamically inserted here -->
+                </div>
+            </div>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Bar -->
+            <header class="top-bar">
+                <div class="search-box">
+                    <input type="text" placeholder="Search...">
+                </div>
+                <div class="top-bar-actions">
+                    <button class="icon-btn">🔔</button>
+                    <button class="icon-btn">👤</button>
+                    <button class="icon-btn">⚙️</button>
+                </div>
+            </header>
+            
+            <!-- Control Panel -->
+            <div class="control-panel">
+                <button id="start-btn" class="btn btn-primary">▶ Start Simulation</button>
+                <button id="stop-btn" class="btn btn-secondary" disabled>⏸ Pause</button>
+                <div class="threshold-control">
+                    <label>Alert Threshold:</label>
+                    <input type="range" id="threshold-slider" min="0" max="1" step="0.05" value="0.5">
+                    <span id="threshold-value">0.5</span>
+                </div>
+            </div>
+            
+            <!-- Export Panel -->
+            <div class="export-panel">
+                <h4>Export Data</h4>
+                <div class="export-buttons">
+                    <button id="export-pdf-btn" class="btn btn-export" title="Generate PDF report">
+                        📄 Generate PDF
+                    </button>
+                    <button id="export-charts-btn" class="btn btn-export" title="Download all charts">
+                        📊 Export Charts
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Statistics Overview -->
+            <section class="stats-overview">
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <h3>Total Time (s)</h3>
+                        <span class="stat-icon"></span>
+                    </div>
+                    <div class="stat-value" id="stat-samples">0</div>
+                    <div class="stat-chart">
+                        <canvas id="samples-chart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <h3>Anomalies Detected</h3>
+                        <span class="stat-icon"></span>
+                    </div>
+                    <div class="stat-value" id="stat-anomalies">0</div>
+                    <div class="stat-chart">
+                        <canvas id="anomalies-chart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <h3>RL Learning Steps</h3>
+                        <span class="stat-icon"></span>
+                    </div>
+                    <div class="stat-value" id="stat-rl-steps">0</div>
+                    <div class="stat-change positive" id="rl-epsilon">ε: 1.000</div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <h3>RL Avg Reward</h3>
+                        <span class="stat-icon"></span>
+                    </div>
+                    <div class="stat-value" id="stat-rl-reward">0.000</div>
+                    <div class="stat-chart">
+                        <canvas id="reward-chart"></canvas>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Charts Section -->
+            <section class="charts-section">
+                <div class="chart-card">
+                    <h3>Live Vote Count Trends</h3>
+                    <canvas id="vote-trends-chart"></canvas>
+                </div>
+                
+                <div class="chart-card">
+                    <h3>Anomaly Detection Scores</h3>
+                    <canvas id="anomaly-scores-chart"></canvas>
+                </div>
+            </section>
+            
+            <!-- RL Learning Section -->
+            <section class="rl-section">
+                <div class="chart-card">
+                    <h3> RL Learning Curve (Rewards)</h3>
+                    <canvas id="rl-rewards-chart"></canvas>
+                </div>
+                
+                <div class="chart-card">
+                    <h3> RL Training Loss</h3>
+                    <canvas id="rl-loss-chart"></canvas>
+                </div>
+            </section>
+            
+            <!-- Model Comparison -->
+            <section class="model-comparison">
+                <div class="chart-card full-width">
+                    <h3>Model Scores Comparison</h3>
+                    <canvas id="model-scores-chart"></canvas>
+                </div>
+            </section>
+            
+            <!-- Candidate Anomaly Attribution -->
+            <section class="candidate-anomalies-section">
+                <div class="chart-card">
+                    <h3>Anomalies Per Candidate</h3>
+                    <canvas id="candidate-pie-chart"></canvas>
+                </div>
+                
+                <div class="chart-card">
+                    <h3>Anomaly Types per Candidate</h3>
+                    <canvas id="candidate-bar-chart"></canvas>
+                </div>
+            </section>
+            
+            <!-- Simulation Complete Section -->
+            <section id="simulation-complete-section" class="simulation-complete-section" style="display: none;">
+                <div class="complete-card">
+                    <h2>Simulation Complete!</h2>
+                    <div class="winner-announcement">
+                        <p class="winner-text">
+                            <span class="trophy">🏆</span> Final Winner: 
+                            <span class="winner-name" id="winner-name">-</span> 
+                            with <span id="winner-votes">0</span> Total Cumulative Votes
+                        </p>
+                    </div>
+                    <div class="results-table-container">
+                        <table class="results-table">
+                            <thead>
+                                <tr>
+                                    <th>Candidate</th>
+                                    <th>Total Votes</th>
+                                </tr>
+                            </thead>
+                            <tbody id="results-table-body">
+                                <!-- Results will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Active Servers / Anomaly Log -->
+            <section class="anomaly-log-section">
+                <div class="table-card">
+                    <h3>Recent Anomaly Log</h3>
+                    <table id="anomaly-table">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Type</th>
+                                <th>Score</th>
+                                <th>Cand1</th>
+                                <th>Cand2</th>
+                                <th>Cand3</th>
+                                <th>Cand4</th>
+                                <th>RL Prediction</th>
+                            </tr>
+                        </thead>
+                        <tbody id="anomaly-table-body">
+                            <tr>
+                                <td colspan="8" class="empty-state">No anomalies detected yet</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+    
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
+
