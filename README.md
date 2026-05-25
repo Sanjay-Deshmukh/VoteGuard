@@ -2,6 +2,8 @@
 
 Modern dark-themed Flask dashboard inspired by Bhacemp template, featuring real-time RL learning and anomaly detection.
 
+![VoteGuard Dashboard](https://raw.githubusercontent.com/Sanjay-Deshmukh/VoteGuard/main/Screenshot%202025-12-09%20114347.png)
+
 ## 🚀 Quick Start
 
 ### 1. Install Dependencies
